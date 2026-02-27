@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="272" viewBox="0 0 480 272">
+  <defs>
+    <linearGradient id="orangeBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E88020"/>
+      <stop offset="50%" stop-color="#D06000"/>
+      <stop offset="100%" stop-color="#A04800"/>
+    </linearGradient>
+    <linearGradient id="greyBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#707070"/>
+      <stop offset="50%" stop-color="#555555"/>
+      <stop offset="100%" stop-color="#404040"/>
+    </linearGradient>
+    <filter id="bevel">
+      <feDropShadow dx="1" dy="1" stdDeviation="0.5" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <!-- Red glow for active alarms -->
+    <filter id="redGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="272" fill="#2A2A2A"/>
+
+  <!-- Title Bar -->
+  <rect x="0" y="0" width="480" height="28" fill="#8B0000"/>
+  <rect x="0" y="27" width="480" height="1" fill="#600000"/>
+  <!-- Flashing warning triangle icon -->
+  <text x="12" y="20" font-family="Arial, sans-serif" font-size="16" fill="#FFD700">&#9888;</text>
+  <text x="30" y="19" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="white">ALARM</text>
+  <text x="90" y="19" font-family="Arial, sans-serif" font-size="10" fill="#FFAAAA">Fault Monitor</text>
+
+  <!-- ============ ALARM LIST ============ -->
+
+  <!-- Column headers -->
+  <text x="46" y="46" font-family="Arial, sans-serif" font-size="9" fill="#777" font-weight="bold">STATUS</text>
+  <text x="120" y="46" font-family="Arial, sans-serif" font-size="9" fill="#777" font-weight="bold">ALARM DESCRIPTION</text>
+  <text x="400" y="46" font-family="Arial, sans-serif" font-size="9" fill="#777" font-weight="bold">ADDRESS</text>
+  <line x1="10" y1="50" x2="470" y2="50" stroke="#444" stroke-width="0.5"/>
+
+  <!-- Alarm Row 1: E-STOP ACTIVE (shown as ACTIVE for demo) -->
+  <rect x="10" y="54" width="460" height="26" rx="2" fill="#3A1515" stroke="#551111" stroke-width="0.5"/>
+  <circle cx="30" cy="67" r="7" fill="#FF2222" stroke="#FF6666" stroke-width="0.5" filter="url(#redGlow)"/>
+  <circle cx="30" cy="67" r="3" fill="#FF8888" opacity="0.6"/>
+  <text x="46" y="71" font-family="Arial, sans-serif" font-size="11" fill="#FF6666" font-weight="bold">E-STOP ACTIVE</text>
+  <text x="380" y="71" font-family="Arial, sans-serif" font-size="9" fill="#888" text-anchor="end">M100</text>
+  <text x="420" y="71" font-family="Arial, sans-serif" font-size="8" fill="#888">[2148]</text>
+
+  <!-- Alarm Row 2: HYDRAULIC PRESSURE LOW (inactive) -->
+  <rect x="10" y="84" width="460" height="26" rx="2" fill="#2A2A2A" stroke="#3A3A3A" stroke-width="0.5"/>
+  <circle cx="30" cy="97" r="7" fill="none" stroke="#555" stroke-width="1.5"/>
+  <circle cx="30" cy="97" r="2" fill="#444"/>
+  <text x="46" y="101" font-family="Arial, sans-serif" font-size="11" fill="#999">HYDRAULIC PRESSURE LOW</text>
+  <text x="380" y="101" font-family="Arial, sans-serif" font-size="9" fill="#888" text-anchor="end">M101</text>
+  <text x="420" y="101" font-family="Arial, sans-serif" font-size="8" fill="#888">[2149]</text>
+
+  <!-- Alarm Row 3: ENCODER FAULT (inactive) -->
+  <rect x="10" y="114" width="460" height="26" rx="2" fill="#2A2A2A" stroke="#3A3A3A" stroke-width="0.5"/>
+  <circle cx="30" cy="127" r="7" fill="none" stroke="#555" stroke-width="1.5"/>
+  <circle cx="30" cy="127" r="2" fill="#444"/>
+  <text x="46" y="131" font-family="Arial, sans-serif" font-size="11" fill="#999">ENCODER FAULT</text>
+  <text x="380" y="131" font-family="Arial, sans-serif" font-size="9" fill="#888" text-anchor="end">M102</text>
+  <text x="420" y="131" font-family="Arial, sans-serif" font-size="8" fill="#888">[2150]</text>
+
+  <!-- Alarm Row 4: OVERTRAVEL LIMIT (inactive) -->
+  <rect x="10" y="144" width="460" height="26" rx="2" fill="#2A2A2A" stroke="#3A3A3A" stroke-width="0.5"/>
+  <circle cx="30" cy="157" r="7" fill="none" stroke="#555" stroke-width="1.5"/>
+  <circle cx="30" cy="157" r="2" fill="#444"/>
+  <text x="46" y="161" font-family="Arial, sans-serif" font-size="11" fill="#999">OVERTRAVEL LIMIT</text>
+  <text x="380" y="161" font-family="Arial, sans-serif" font-size="9" fill="#888" text-anchor="end">M103</text>
+  <text x="420" y="161" font-family="Arial, sans-serif" font-size="8" fill="#888">[2151]</text>
+
+  <!-- Alarm Row 5: QUANTITY TARGET REACHED (inactive) -->
+  <rect x="10" y="174" width="460" height="26" rx="2" fill="#2A2A2A" stroke="#3A3A3A" stroke-width="0.5"/>
+  <circle cx="30" cy="187" r="7" fill="none" stroke="#555" stroke-width="1.5"/>
+  <circle cx="30" cy="187" r="2" fill="#444"/>
+  <text x="46" y="191" font-family="Arial, sans-serif" font-size="11" fill="#999">QUANTITY TARGET REACHED</text>
+  <text x="380" y="191" font-family="Arial, sans-serif" font-size="9" fill="#888" text-anchor="end">M104</text>
+  <text x="420" y="191" font-family="Arial, sans-serif" font-size="8" fill="#888">[2152]</text>
+
+  <!-- ============ FAULT CODE DISPLAY ============ -->
+  <line x1="10" y1="206" x2="470" y2="206" stroke="#444" stroke-width="0.5"/>
+
+  <text x="20" y="222" font-family="Arial, sans-serif" font-size="10" fill="#CCCCCC">Fault Code:</text>
+  <rect x="100" y="210" width="60" height="18" rx="2" fill="#000000" stroke="#666" stroke-width="1"/>
+  <text x="130" y="223" font-family="Arial, sans-serif" font-size="12" fill="#FF6666" text-anchor="middle" font-weight="bold">1</text>
+  <text x="165" y="222" font-family="Arial, sans-serif" font-size="8" fill="#888">D7 [4103]</text>
+
+  <!-- Fault history -->
+  <text x="240" y="222" font-family="Arial, sans-serif" font-size="10" fill="#CCCCCC">History:</text>
+
+  <text x="295" y="222" font-family="Arial, sans-serif" font-size="9" fill="#999">D100=</text>
+  <rect x="318" y="211" width="30" height="15" rx="1" fill="#000" stroke="#555" stroke-width="0.5"/>
+  <text x="333" y="222" font-family="Arial, sans-serif" font-size="9" fill="#AAA" text-anchor="middle">0</text>
+
+  <text x="354" y="222" font-family="Arial, sans-serif" font-size="9" fill="#999">D101=</text>
+  <rect x="380" y="211" width="30" height="15" rx="1" fill="#000" stroke="#555" stroke-width="0.5"/>
+  <text x="395" y="222" font-family="Arial, sans-serif" font-size="9" fill="#AAA" text-anchor="middle">0</text>
+
+  <text x="416" y="222" font-family="Arial, sans-serif" font-size="9" fill="#999">D102=</text>
+  <rect x="442" y="211" width="30" height="15" rx="1" fill="#000" stroke="#555" stroke-width="0.5"/>
+  <text x="457" y="222" font-family="Arial, sans-serif" font-size="9" fill="#AAA" text-anchor="middle">0</text>
+
+  <text x="295" y="234" font-family="Arial, sans-serif" font-size="7" fill="#888">[4196]     [4197]     [4198]</text>
+
+  <!-- ============ BOTTOM BUTTONS ============ -->
+  <line x1="10" y1="240" x2="470" y2="240" stroke="#444" stroke-width="0.5"/>
+
+  <!-- RESET button -->
+  <rect x="10" y="248" width="140" height="18" rx="3" fill="#A04800"/>
+  <rect x="11" y="249" width="138" height="16" rx="2" fill="url(#orangeBtn)" filter="url(#bevel)"/>
+  <rect x="11" y="249" width="138" height="1" fill="#FF9840" opacity="0.5"/>
+  <rect x="11" y="249" width="1" height="16" fill="#E88828" opacity="0.4"/>
+  <rect x="148" y="249" width="1" height="16" fill="#703400" opacity="0.6"/>
+  <rect x="11" y="264" width="138" height="1" fill="#703400" opacity="0.6"/>
+  <text x="80" y="261" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle" font-weight="bold">RESET ALARMS</text>
+
+  <!-- BACK TO OPERATE button -->
+  <rect x="160" y="248" width="160" height="18" rx="3" fill="#404040"/>
+  <rect x="161" y="249" width="158" height="16" rx="2" fill="url(#greyBtn)" filter="url(#bevel)"/>
+  <rect x="161" y="249" width="158" height="1" fill="#888" opacity="0.4"/>
+  <rect x="161" y="249" width="1" height="16" fill="#777" opacity="0.3"/>
+  <rect x="318" y="249" width="1" height="16" fill="#333" opacity="0.6"/>
+  <rect x="161" y="264" width="158" height="1" fill="#333" opacity="0.6"/>
+  <text x="240" y="261" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle" font-weight="bold">BACK TO OPERATE</text>
+</svg>

@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="272" viewBox="0 0 480 272">
+  <defs>
+    <linearGradient id="greenBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5CBF5C"/>
+      <stop offset="100%" stop-color="#2D8B2D"/>
+    </linearGradient>
+    <linearGradient id="greyBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#AAA"/>
+      <stop offset="100%" stop-color="#777"/>
+    </linearGradient>
+    <linearGradient id="redBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E04040"/>
+      <stop offset="100%" stop-color="#B02020"/>
+    </linearGradient>
+    <linearGradient id="orangeBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E08040"/>
+      <stop offset="100%" stop-color="#C06020"/>
+    </linearGradient>
+    <linearGradient id="yellowBtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8C840"/>
+      <stop offset="100%" stop-color="#C0A020"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background - light cyan like real TouchWin -->
+  <rect width="480" height="272" fill="#A8D8E8"/>
+
+  <!-- === TITLE === -->
+  <text x="18" y="26" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#000080">OPERATE</text>
+
+  <!-- === TOP ROW: STOP / PUMP OFF / SYS SET buttons === -->
+  <!-- STOP button (red) -->
+  <rect x="12" y="38" width="80" height="30" rx="3" fill="url(#redBtn)" stroke="#800" stroke-width="1"/>
+  <text x="52" y="57" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle" font-weight="bold">STOP</text>
+  <text x="12" y="34" font-family="Arial, sans-serif" font-size="6" fill="#888">M12 [2060]</text>
+
+  <!-- Pump Off button (orange/red) -->
+  <rect x="100" y="38" width="80" height="30" rx="3" fill="url(#orangeBtn)" stroke="#804020" stroke-width="1"/>
+  <text x="140" y="57" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle" font-weight="bold">Pump Off</text>
+  <text x="100" y="34" font-family="Arial, sans-serif" font-size="6" fill="#888">M14 [2062]</text>
+
+  <!-- SYS SET button (yellow) -->
+  <rect x="188" y="38" width="80" height="30" rx="3" fill="url(#yellowBtn)" stroke="#A08020" stroke-width="1"/>
+  <text x="228" y="57" font-family="Arial, sans-serif" font-size="11" fill="#333" text-anchor="middle" font-weight="bold">SYS SET</text>
+
+  <!-- Two indicator lamps (dark circles from photo) -->
+  <circle cx="290" cy="53" r="10" fill="#333" stroke="#555" stroke-width="1"/>
+  <circle cx="320" cy="53" r="10" fill="#333" stroke="#555" stroke-width="1"/>
+  <text x="282" y="34" font-family="Arial, sans-serif" font-size="6" fill="#888">Y5 [1285]</text>
+
+  <!-- === MIDDLE ROW: Auto Start / Clear buttons === -->
+  <!-- Auto Start button (green/yellow) -->
+  <rect x="12" y="82" width="90" height="28" rx="3" fill="url(#greenBtn)" stroke="#2A7A2A" stroke-width="1"/>
+  <text x="57" y="100" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle" font-weight="bold">Auto Start</text>
+  <text x="12" y="78" font-family="Arial, sans-serif" font-size="6" fill="#888">M11 [2059]</text>
+
+  <!-- Clear button (grey) -->
+  <rect x="110" y="82" width="70" height="28" rx="3" fill="url(#greyBtn)" stroke="#666" stroke-width="1"/>
+  <text x="145" y="100" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle" font-weight="bold">Clear</text>
+  <text x="110" y="78" font-family="Arial, sans-serif" font-size="6" fill="#888">D4=0</text>
+
+  <!-- Another indicator lamp / circle -->
+  <circle cx="210" cy="96" r="10" fill="#333" stroke="#555" stroke-width="1"/>
+
+  <!-- === ENCODER READING (right side) === -->
+  <text x="380" y="84" font-family="Arial, sans-serif" font-size="12" fill="#000080" font-weight="bold">Encoder reading</text>
+  <text x="430" y="98" font-family="Arial, sans-serif" font-size="10" fill="#000080">mm</text>
+  <!-- Encoder value box -->
+  <rect x="350" y="102" width="110" height="34" rx="2" fill="white" stroke="#000080" stroke-width="1.5"/>
+  <text x="405" y="126" font-family="Arial, sans-serif" font-size="20" fill="#000080" text-anchor="middle" font-weight="bold">0</text>
+  <text x="350" y="144" font-family="Arial, sans-serif" font-size="6" fill="#888">D2 [4098]</text>
+
+  <!-- === BOTTOM DATA ROW === -->
+  <!-- Separator -->
+  <line x1="10" y1="148" x2="470" y2="148" stroke="#6090B0" stroke-width="0.5"/>
+
+  <!-- Length -->
+  <text x="18" y="172" font-family="Arial, sans-serif" font-size="14" fill="#000080" font-weight="bold">Length</text>
+  <rect x="18" y="178" width="90" height="32" rx="2" fill="white" stroke="#000080" stroke-width="1.5"/>
+  <text x="63" y="200" font-family="Arial, sans-serif" font-size="18" fill="#000080" text-anchor="middle" font-weight="bold">6112</text>
+  <text x="112" y="200" font-family="Arial, sans-serif" font-size="10" fill="#000080">mm</text>
+  <text x="18" y="218" font-family="Arial, sans-serif" font-size="6" fill="#888">D1 [4097]</text>
+
+  <!-- Quantity -->
+  <text x="140" y="172" font-family="Arial, sans-serif" font-size="14" fill="#000080" font-weight="bold">Quantity</text>
+  <rect x="140" y="178" width="60" height="32" rx="2" fill="white" stroke="#000080" stroke-width="1.5"/>
+  <text x="170" y="200" font-family="Arial, sans-serif" font-size="18" fill="#000080" text-anchor="middle" font-weight="bold">10</text>
+  <text x="204" y="200" font-family="Arial, sans-serif" font-size="10" fill="#000080">pcs</text>
+  <text x="140" y="218" font-family="Arial, sans-serif" font-size="6" fill="#888">D3 [4099]</text>
+
+  <!-- Done -->
+  <text x="235" y="172" font-family="Arial, sans-serif" font-size="14" fill="#000080" font-weight="bold">Done</text>
+  <rect x="235" y="178" width="60" height="32" rx="2" fill="white" stroke="#000080" stroke-width="1.5"/>
+  <text x="265" y="200" font-family="Arial, sans-serif" font-size="18" fill="#000080" text-anchor="middle" font-weight="bold">4</text>
+  <text x="299" y="200" font-family="Arial, sans-serif" font-size="10" fill="#000080">pcs</text>
+  <text x="235" y="218" font-family="Arial, sans-serif" font-size="6" fill="#888">D4 [4100]</text>
+
+  <!-- MANUAL MODE SET indicator (green text) -->
+  <text x="322" y="175" font-family="Arial, sans-serif" font-size="13" fill="#00AA00" font-weight="bold">MANUAL</text>
+  <text x="322" y="192" font-family="Arial, sans-serif" font-size="13" fill="#00AA00" font-weight="bold">MODE SET</text>
+  <text x="322" y="204" font-family="Arial, sans-serif" font-size="6" fill="#888">D8 [4104] (0=Manual, 1=Auto)</text>
+
+  <!-- === BOTTOM STATUS BAR === -->
+  <rect x="0" y="255" width="480" height="17" fill="#90C0D8"/>
+  <text x="10" y="267" font-family="Arial, sans-serif" font-size="7" fill="#555">D0[4096]=State | D1[4097]=Length | D2[4098]=Encoder | D3[4099]=Qty | D4[4100]=Done | D8[4104]=Mode | M1[2049]=Pump</text>
+
+  <!-- Machine state indicator -->
+  <circle cx="460" cy="245" r="5" fill="#33CC33" stroke="#555" stroke-width="0.5"/>
+  <text x="445" y="240" font-family="Arial, sans-serif" font-size="6" fill="#888" text-anchor="end">D0 [4096]</text>
+</svg>
