@@ -1,2 +1,4 @@
 .claude
 .venv
+discovery/sessions/
+*/__pycache__

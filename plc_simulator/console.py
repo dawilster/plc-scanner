@@ -18,6 +18,7 @@ Sensor/event keys (toggle X inputs):
 """
 
 import asyncio
+import select
 import sys
 import termios
 import tty
@@ -86,19 +87,17 @@ class Console:
             tty.setcbreak(fd)
             while True:
                 self._print_status()
-                # Non-blocking read with small sleep to not block event loop
-                char = await asyncio.get_event_loop().run_in_executor(None, self._read_char)
-                if char:
+                # Non-blocking check with select, then sleep to yield to event loop
+                if select.select([sys.stdin], [], [], 0)[0]:
+                    char = sys.stdin.read(1)
                     if char == 'q':
                         print("\n\nShutting down...")
                         break
                     self._handle_key(char)
+                else:
+                    await asyncio.sleep(0.05)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, self._old_settings)
-
-    def _read_char(self):
-        """Blocking read of a single character from stdin."""
-        return sys.stdin.read(1)
 
     def _handle_key(self, key):
         """Map keypress to PLC action."""
