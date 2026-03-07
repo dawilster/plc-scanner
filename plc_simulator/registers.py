@@ -88,6 +88,8 @@ M_CMD_STOP        = M_BASE + 12  # 2060 - M12: HMI cmd: Request Stop
 M_CMD_PUMP_ON     = M_BASE + 13  # 2061 - M13: HMI cmd: Request Pump ON
 M_CMD_PUMP_OFF    = M_BASE + 14  # 2062 - M14: HMI cmd: Request Pump OFF
 M_CMD_MANUAL_CUT  = M_BASE + 15  # 2063 - M15: HMI cmd: Request Manual Cut
+M_CMD_CLEAR       = M_BASE + 16  # 2064 - M16: HMI cmd: Clear/reset counter
+M_CMD_MODE_SET    = M_BASE + 17  # 2065 - M17: HMI cmd: Toggle Manual/Auto mode
 M_CMD_JOG_FWD     = M_BASE + 20  # 2068 - M20: HMI cmd: Request FWD jog
 M_CMD_JOG_BACK    = M_BASE + 21  # 2069 - M21: HMI cmd: Request BACK jog
 

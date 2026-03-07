@@ -1,0 +1,74 @@
+{
+  "3,4102": {
+    "name": "Pump pressure",
+    "confidence": 3,
+    "category": "encoder",
+    "notes": ""
+  },
+  "3,4098": {
+    "name": "Encoder Reading or Done",
+    "confidence": 3,
+    "category": "analog",
+    "notes": ""
+  },
+  "3,4096": {
+    "name": "Machine state",
+    "confidence": 3,
+    "category": "state",
+    "notes": ""
+  },
+  "3,4097": {
+    "name": "length",
+    "confidence": 3,
+    "category": "",
+    "notes": ""
+  },
+  "3,4099": {
+    "name": "Quantity",
+    "confidence": 3,
+    "category": "",
+    "notes": ""
+  },
+  "1,2049": {
+    "name": "Pump on/off",
+    "confidence": 3,
+    "category": "status",
+    "notes": ""
+  },
+  "3,4100": {
+    "name": "Done",
+    "confidence": 3,
+    "category": "state",
+    "notes": ""
+  },
+  "1,2059": {
+    "name": "Start",
+    "confidence": 3,
+    "category": "command",
+    "notes": ""
+  },
+  "3,4104": {
+    "name": "Auto/Manual Mode",
+    "confidence": 3,
+    "category": "state",
+    "notes": ""
+  },
+  "3,4105": {
+    "name": "Cut Dwell",
+    "confidence": 3,
+    "category": "data",
+    "notes": ""
+  },
+  "3,4101": {
+    "name": "Feed Speed",
+    "confidence": 3,
+    "category": "setpoint",
+    "notes": ""
+  },
+  "3,4106": {
+    "name": "Encoder Cal",
+    "confidence": 2,
+    "category": "data",
+    "notes": ""
+  }
+}

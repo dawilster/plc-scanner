@@ -5,8 +5,8 @@ Operator keys (write M relay commands, like the TG765 HMI would):
   s = Auto Start (M11)    x = Stop/Reset (M12)
   p = Pump ON (M13)       o = Pump OFF (M14)
   c = Manual Cut (M15)    f = Jog FWD (M20)
-  b = Jog BACK (M21)      a = Toggle Auto/Manual mode (D8)
-  r = Reset piece counter (D4=0)
+  b = Jog BACK (M21)      a = Mode Set (M17)
+  r = Clear counter (M16)  +/- = Speed up/down
 
 Sensor/event keys (toggle X inputs):
   e = Toggle E-STOP (X7)
@@ -74,7 +74,8 @@ class Console:
     async def run(self):
         """Read keyboard input and map to PLC actions."""
         print("\n=== OPERATOR CONSOLE ===")
-        print("Operator:  s=Start  x=Stop  p=PumpON  o=PumpOFF  c=Cut  f=FWD  b=BACK  a=Mode  r=Reset")
+        print("Operator:  s=Start  x=Stop  p=PumpON  o=PumpOFF  c=Cut  f=FWD  b=BACK")
+        print("           a=Mode   r=Clear  +=SpeedUp  -=SlowDown  y=SysSet")
         print("Sensors:   e=E-Stop  m=Material  h=Pressure  t=Overtravel")
         print("           q=Quit")
         print("=" * 80)
@@ -126,13 +127,22 @@ class Console:
             self._set_coil(M_CMD_JOG_BACK, True)
             print(f"\n  >> JOG BACK (M21)")
         elif key == 'a':
+            self._set_coil(M_CMD_MODE_SET, True)
             current = self._get_hr(D_MODE)
-            new_mode = 0 if current == 1 else 1
-            self._set_hr(D_MODE, new_mode)
-            print(f"\n  >> MODE -> {'AUTO' if new_mode == 1 else 'MANUAL'} (D8={new_mode})")
+            print(f"\n  >> MODE SET (M17) — currently {'AUTO' if current == 1 else 'MANUAL'}")
         elif key == 'r':
-            self._set_hr(D_QTY_CURRENT, 0)
-            print(f"\n  >> COUNTER RESET (D4=0)")
+            self._set_coil(M_CMD_CLEAR, True)
+            print(f"\n  >> CLEAR (M16)")
+        elif key == '+':
+            current = self._get_hr(D_FEED_SPEED)
+            new_speed = min(current + 50, 500)
+            self._set_hr(D_FEED_SPEED, new_speed)
+            print(f"\n  >> SPEED UP: {new_speed}mm/s")
+        elif key == '-':
+            current = self._get_hr(D_FEED_SPEED)
+            new_speed = max(current - 50, 10)
+            self._set_hr(D_FEED_SPEED, new_speed)
+            print(f"\n  >> SLOW DOWN: {new_speed}mm/s")
 
         # Sensor toggles (toggle X discrete inputs)
         elif key == 'e':
@@ -151,3 +161,60 @@ class Console:
             current = self._get_di(X_OVERTRAVEL)
             self._set_di(X_OVERTRAVEL, not current)
             print(f"\n  >> OVERTRAVEL {'ACTIVE' if not current else 'CLEAR'} (X5={'1' if not current else '0'})")
+
+        elif key == 'y':
+            self._sys_set()
+
+    def _sys_set(self):
+        """SYS SET screen — edit machine setpoints interactively."""
+        fd = sys.stdin.fileno()
+        # Restore normal terminal mode for line input
+        termios.tcsetattr(fd, termios.TCSADRAIN, self._old_settings)
+
+        params = [
+            ("Length Setpoint (mm)", D_LENGTH_SETPOINT),
+            ("Quantity Target",      D_QTY_TARGET),
+            ("Feed Speed (mm/s)",    D_FEED_SPEED),
+            ("Cut Dwell (ms)",       D_CUT_DWELL),
+            ("Encoder Cal (p/mm)",   D_ENCODER_CAL),
+        ]
+
+        print("\n")
+        print("=" * 50)
+        print("  SYS SET — Machine Parameters")
+        print("=" * 50)
+        for i, (label, addr) in enumerate(params, 1):
+            val = self._get_hr(addr)
+            print(f"  {i}. {label:.<30} {val}")
+        print(f"  0. Back")
+        print("=" * 50)
+
+        try:
+            choice = input("  Select parameter [0-5]: ").strip()
+            if choice in ('0', ''):
+                print("  (no changes)")
+            elif choice in ('1', '2', '3', '4', '5'):
+                idx = int(choice) - 1
+                label, addr = params[idx]
+                current = self._get_hr(addr)
+                new_val = input(f"  {label} [{current}] -> ").strip()
+                if new_val == '':
+                    print("  (no change)")
+                else:
+                    try:
+                        val = int(new_val)
+                        if val < 0 or val > 65535:
+                            print("  !! Value must be 0-65535")
+                        else:
+                            self._set_hr(addr, val)
+                            print(f"  >> Set {label} = {val}")
+                    except ValueError:
+                        print("  !! Invalid number")
+            else:
+                print("  !! Invalid choice")
+        except (EOFError, KeyboardInterrupt):
+            print("\n  (cancelled)")
+
+        print()
+        # Restore cbreak mode
+        tty.setcbreak(fd)

@@ -160,7 +160,8 @@ LABEL_PRESETS = [
     "Pump OFF",
     "Auto Start",
     "Stop",
-    "E-Stop",
+    "Clear",
+    "Mode Set",
     "Jog FWD",
     "Jog BACK",
     "Manual Cut",
@@ -170,12 +171,29 @@ LABEL_PRESETS = [
 # ── Tag Store ───────────────────────────────────────────────────────────────
 
 class TagStore:
-    """Persistent register tag storage. Saves to discovery/tags.json."""
+    """Persistent register tag storage, scoped per connection.
 
-    def __init__(self, path="discovery/tags.json"):
-        self.path = path
+    Tags are stored in discovery/tags/<host>_<port>.json so different
+    PLCs (e.g. local simulator vs client site) don't mix.
+    """
+
+    def __init__(self, host="127.0.0.1", port=5020):
+        safe_name = f"{host}_{port}".replace(".", "-")
+        self.path = os.path.join("discovery", "tags", f"{safe_name}.json")
+        self.connection_label = f"{host}:{port}"
         self.tags = {}  # "fc,addr" -> {"name", "confidence", "category", "notes"}
+        self._migrate_legacy()
         self.load()
+
+    def _migrate_legacy(self):
+        """One-time migration: move old discovery/tags.json into this connection's file."""
+        legacy = "discovery/tags.json"
+        if os.path.exists(legacy) and not os.path.exists(self.path):
+            try:
+                os.makedirs(os.path.dirname(self.path), exist_ok=True)
+                os.rename(legacy, self.path)
+            except OSError:
+                pass
 
     def load(self):
         if os.path.exists(self.path):
@@ -220,9 +238,9 @@ class TagStore:
         name = tag["name"][:max_width]
         conf = tag.get("confidence", 1)
         if conf >= 3:
-            return f" {BRIGHT_CYAN}★★★ {name}{RST}"
+            return f" {BRIGHT_GREEN}★★★ {name}{RST}"
         elif conf == 2:
-            return f" {GREEN}★★☆ {name}{RST}"
+            return f" {YELLOW}★★☆ {name}{RST}"
         else:
             return f" {DIM}★☆☆ {name}{RST}"
 
@@ -866,6 +884,25 @@ class Display:
             if row_items:
                 right_lines.append("  " + "  ".join(row_items))
 
+        # ── Tagged M relay legend ──
+        m_tagged = []
+        for r in m_ranges:
+            for i in range(r["count"]):
+                addr = r["start"] + i
+                tag = app.tag_store.get(1, addr)
+                if tag:
+                    sym = symbol(1, addr)
+                    val = poller.values.get((1, addr), 0)
+                    conf_colors = {1: DIM, 2: YELLOW, 3: BRIGHT_GREEN}
+                    cc = conf_colors.get(tag.get("confidence", 1), DIM)
+                    state = f"{GREEN}ON{RST}" if val else f"{DIM}OFF{RST}"
+                    m_tagged.append(f"  {cc}{sym}{RST} {state} {DIM}{tag['name']}{RST}")
+        if m_tagged:
+            right_lines.append("")
+            right_lines.append(f"  {BOLD}TAGGED RELAYS{RST}")
+            for line in m_tagged:
+                right_lines.append(line)
+
         # ── Y outputs & X inputs ──
         right_lines.append("")
         right_lines.append(f"  {BOLD}Y OUTPUTS        X INPUTS{RST}")
@@ -917,6 +954,32 @@ class Display:
                     else:
                         parts += f"{DIM}{sym}={'1' if val else '0'}{RST} "
             right_lines.append(parts)
+
+        # ── Tagged Y/X legend ──
+        yx_tagged = []
+        for i in range(y_range["count"]):
+            addr = y_range["start"] + i
+            tag = app.tag_store.get(1, addr)
+            if tag:
+                sym = symbol(1, addr)
+                val = poller.values.get((1, addr), 0)
+                state = f"{GREEN}ON{RST}" if val else f"{DIM}OFF{RST}"
+                cc = {1: DIM, 2: YELLOW, 3: BRIGHT_GREEN}.get(tag.get("confidence", 1), DIM)
+                yx_tagged.append(f"  {cc}{sym}{RST} {state} {DIM}{tag['name']}{RST}")
+        for i in range(x_range["count"]):
+            addr = x_range["start"] + i
+            tag = app.tag_store.get(2, addr)
+            if tag:
+                sym = symbol(2, addr)
+                val = poller.values.get((2, addr), 0)
+                state = f"{GREEN}ON{RST}" if val else f"{DIM}OFF{RST}"
+                cc = {1: DIM, 2: YELLOW, 3: BRIGHT_GREEN}.get(tag.get("confidence", 1), DIM)
+                yx_tagged.append(f"  {cc}{sym}{RST} {state} {DIM}{tag['name']}{RST}")
+        if yx_tagged:
+            right_lines.append("")
+            right_lines.append(f"  {BOLD}TAGGED I/O{RST}")
+            for line in yx_tagged:
+                right_lines.append(line)
 
         # Merge columns
         col_width = (self.width - 4) // 2
@@ -1093,8 +1156,15 @@ class Display:
                 "type_label": type_label, "tag": tag_name,
             })
 
-        # Sort: bit registers (commands/status) first by time, then data regs
-        results.sort(key=lambda r: (0 if r["fc"] in (1, 2) else 1, r["first_time"]))
+        # Sort by time of first change (earliest = likely the trigger)
+        results.sort(key=lambda r: r["first_time"])
+
+        # Compute relative offset from the very first change
+        if results:
+            t0 = results[0]["first_time"]
+            for r in results:
+                r["offset_s"] = r["first_time"] - t0
+
         return results
 
     def _render_bottom(self, app):
@@ -1138,7 +1208,7 @@ class Display:
             lines.append(
                 f"  {RED}●{RST} CAPTURE: \"{cap.label}\"  "
                 f"{n_changes} events across {n_regs} register{'s' if n_regs != 1 else ''}  "
-                f"{DIM}[Enter=finish  Esc=cancel]{RST}"
+                f"{DIM}[Enter=finish  Esc=cancel  ↑↓=select  t=tag  d=untag]{RST}"
             )
 
             if not summary:
@@ -1146,45 +1216,52 @@ class Display:
             else:
                 # Header
                 lines.append(
-                    f"  {DIM}{'Register':<8} {'Type':<8} {'First':>6} {'':>3} {'Last':>6}  "
-                    f"{'#':>3}  Tag{RST}"
+                    f"  {DIM} {'Time':>7}  {'Register':<8} {'Type':<8} {'First':>6} {'':>3} "
+                    f"{'Last':>6}  {'#':>3}  Tag{RST}"
                 )
-                for info in summary:
+                for idx, info in enumerate(summary):
                     sym = info["symbol"]
                     fc = info["fc"]
                     first_val = info["first"]
                     last_val = info["last"]
                     count = info["count"]
                     tag_name = info["tag"]
-                    addr = info["addr"]
+                    offset = info.get("offset_s", 0)
+                    is_sel = (idx == app.capture_cursor)
+                    cursor_ch = ">" if is_sel else " "
 
-                    # Color by register type
+                    # Timing column — first change is the likely trigger
+                    if idx == 0:
+                        time_str = f"{YELLOW}{'FIRST':>7}{RST}"
+                    else:
+                        time_str = f"{DIM}+{offset:.3f}s{RST}"
+
+                    # Build value display
                     if fc in (1, 2) and first_val != last_val:
-                        # Bit change — highlight these, they're the important ones
-                        on_off = f"{'OFF':>6}  →  {'ON':>6}" if last_val else f"{'ON':>6}  →  {'OFF':>6}"
+                        val_str = f"{'OFF':>6}  →  {'ON':>6}" if last_val else f"{'ON':>6}  →  {'OFF':>6}"
                         type_label = info["type_label"]
                         color = YELLOW if not tag_name else GREEN
-                        lines.append(
-                            f"  {color}{sym:<8}{RST} {type_label:<8} {on_off}  {count:>3}x {DIM}{tag_name}{RST}"
-                        )
                     elif fc == 3:
-                        # Data register — show value change
                         type_label = info["type_label"]
                         if first_val == last_val:
-                            arrow = f"{first_val:>6}  =  {last_val:>6}"
+                            val_str = f"{first_val:>6}  =  {last_val:>6}"
                             color = DIM
                         else:
-                            arrow = f"{first_val:>6}  →  {last_val:>6}"
+                            val_str = f"{first_val:>6}  →  {last_val:>6}"
                             color = CYAN if count > 5 else ""
-                        lines.append(
-                            f"  {color}{sym:<8}{RST} {type_label:<8} {arrow}  {count:>3}x {DIM}{tag_name}{RST}"
-                        )
                     else:
                         type_label = info["type_label"]
-                        on_off = f"{first_val:>6}  →  {last_val:>6}"
-                        lines.append(
-                            f"  {sym:<8} {type_label:<8} {on_off}  {count:>3}x {DIM}{tag_name}{RST}"
-                        )
+                        val_str = f"{first_val:>6}  →  {last_val:>6}"
+                        color = ""
+
+                    row = (
+                        f"  {cursor_ch}{time_str}  "
+                        f"{color}{sym:<8}{RST} {type_label:<8} {val_str}  {count:>3}x {DIM}{tag_name}{RST}"
+                    )
+                    if is_sel:
+                        lines.append(f"{BG_SELECT}{row}{RST}")
+                    else:
+                        lines.append(row)
 
             while len(lines) < 4:
                 lines.append("")
@@ -1220,7 +1297,7 @@ class Display:
             lines.append(
                 f"  {BOLD}{score}%{RST} ready  |  "
                 f"{n_unresolved} unresolved  |  "
-                f"↑↓=select  t=tag  Tab=next mode"
+                f"↑↓=select  t=tag  d=untag  Tab=next mode"
             )
             return lines
 
@@ -1237,7 +1314,7 @@ class Display:
             if tag:
                 conf = tag.get("confidence", 1)
                 stars = "★" * conf + "☆" * (3 - conf)
-                conf_colors = {1: DIM, 2: GREEN, 3: BRIGHT_CYAN}
+                conf_colors = {1: DIM, 2: YELLOW, 3: BRIGHT_GREEN}
                 tag_display = f"{conf_colors.get(conf, DIM)}{stars} {tag['name']}{RST}"
                 changes_str = f"Changed {act['count']}x" if act else "No changes"
                 lines.append(f"  {BOLD}{sym_str}{RST} [{addr}] = {val}  {tag_display}  |  {changes_str}")
@@ -1261,7 +1338,7 @@ class Display:
                 f"  Progress: {n_tagged}/{len(REGISTER_LIST)}  "
                 f"Readiness: {score}%  "
                 f"Cap: {cap_count}  Seq: {seq_count}  |  "
-                f"↑↓=nav  t=tag  1-3=conf"
+                f"↑↓=nav  t=tag  d=untag  1-3=conf"
             )
         else:
             lines.append(
@@ -1276,7 +1353,7 @@ class Display:
                 f"Captures: {len(app.captures)}  Sequences: {len(app.sequences)}  |  "
                 f"Session: {app.session_dir_short}"
             )
-            lines.append(f"  {DIM}↑↓=navigate  t=tag  1-3=confidence  Tab=mode{RST}")
+            lines.append(f"  {DIM}↑↓=navigate  t=tag  d=untag  1-3=confidence  Tab=mode{RST}")
 
         return lines
 
@@ -1319,8 +1396,8 @@ class ScannerApp:
         # Behavior tracking for suggestions
         self.behavior_data = {}  # (fc,addr) -> {recent_values, pulse_starts, pulse_ends, ...}
 
-        # Tag store + analyzer
-        self.tag_store = TagStore()
+        # Tag store + analyzer (scoped to this connection)
+        self.tag_store = TagStore(host=host, port=port)
         self.analyzer = BehaviorAnalyzer()
         self._suggestion_cache = {}
         self._suggestion_cache_scan = 0
@@ -1328,6 +1405,7 @@ class ScannerApp:
         # Cursor navigation
         self.cursor_pos = 0
         self.map_cursor = 0
+        self.capture_cursor = 0
 
         # Input
         self.label_buffer = ""
@@ -1649,7 +1727,9 @@ class ScannerApp:
             self._cursor_down()
         elif key == "t":
             self._start_tag_input()
-        elif key in ("1", "2", "3") and self.mode in (Mode.SCAN, Mode.MAP):
+        elif key == "d":
+            self._delete_tag()
+        elif key in ("1", "2", "3") and self.mode in (Mode.SCAN, Mode.MAP, Mode.CAPTURE):
             self._set_confidence(int(key))
         elif key == "+" and self.active_sequence:
             self.active_sequence.noise_threshold_ms = min(
@@ -1660,11 +1740,20 @@ class ScannerApp:
                 self.active_sequence.noise_threshold_ms - 100, 100
             )
 
+    def _capture_summary_keys(self):
+        """Return list of (fc, addr) from active capture summary, in display order."""
+        if not self.active_capture or not self.active_capture.changes:
+            return []
+        summary = Display._capture_summary(self.active_capture, self.tag_store)
+        return [(s["fc"], s["addr"]) for s in summary]
+
     def _cursor_up(self):
         if self.mode == Mode.SCAN:
             self.cursor_pos = max(0, self.cursor_pos - 1)
         elif self.mode == Mode.MAP:
             self.map_cursor = max(0, self.map_cursor - 1)
+        elif self.mode == Mode.CAPTURE and self.active_capture:
+            self.capture_cursor = max(0, self.capture_cursor - 1)
 
     def _cursor_down(self):
         if self.mode == Mode.SCAN:
@@ -1672,6 +1761,9 @@ class ScannerApp:
         elif self.mode == Mode.MAP:
             unresolved = self.get_unresolved()
             self.map_cursor = min(max(0, len(unresolved) - 1), self.map_cursor + 1)
+        elif self.mode == Mode.CAPTURE and self.active_capture:
+            keys = self._capture_summary_keys()
+            self.capture_cursor = min(max(0, len(keys) - 1), self.capture_cursor + 1)
 
     def _start_tag_input(self):
         if self.mode == Mode.SCAN:
@@ -1683,7 +1775,14 @@ class ScannerApp:
             if not unresolved or self.map_cursor >= len(unresolved):
                 return
             key = unresolved[self.map_cursor][0]
-            # Move scan cursor to this register for context
+            if key in REGISTER_INDEX:
+                self.cursor_pos = REGISTER_INDEX[key]
+        elif self.mode == Mode.CAPTURE and self.active_capture:
+            keys = self._capture_summary_keys()
+            if not keys or self.capture_cursor >= len(keys):
+                return
+            key = keys[self.capture_cursor]
+            # Point scan cursor here too so tag input handler can use selected_key
             if key in REGISTER_INDEX:
                 self.cursor_pos = REGISTER_INDEX[key]
         else:
@@ -1724,6 +1823,32 @@ class ScannerApp:
         if len(key) == 1 and key.isprintable():
             self.label_buffer += key
 
+    def _delete_tag(self):
+        """Remove tag from selected register, reverting to suggestion."""
+        if self.mode == Mode.SCAN:
+            key = self.selected_key
+        elif self.mode == Mode.MAP:
+            unresolved = self.get_unresolved()
+            if unresolved and self.map_cursor < len(unresolved):
+                key = unresolved[self.map_cursor][0]
+            else:
+                return
+        elif self.mode == Mode.CAPTURE and self.active_capture:
+            keys = self._capture_summary_keys()
+            if keys and self.capture_cursor < len(keys):
+                key = keys[self.capture_cursor]
+            else:
+                return
+        else:
+            return
+
+        if key:
+            key_str = f"{key[0]},{key[1]}"
+            if key_str in self.tag_store.tags:
+                del self.tag_store.tags[key_str]
+                self.tag_store.save()
+                self._suggestion_cache.pop(key, None)
+
     def _set_confidence(self, level):
         if self.mode == Mode.SCAN:
             key = self.selected_key
@@ -1731,6 +1856,12 @@ class ScannerApp:
             unresolved = self.get_unresolved()
             if unresolved and self.map_cursor < len(unresolved):
                 key = unresolved[self.map_cursor][0]
+            else:
+                return
+        elif self.mode == Mode.CAPTURE and self.active_capture:
+            keys = self._capture_summary_keys()
+            if keys and self.capture_cursor < len(keys):
+                key = keys[self.capture_cursor]
             else:
                 return
         else:
@@ -1794,6 +1925,7 @@ class ScannerApp:
         self.input_state = InputState.NORMAL
         now = time.monotonic()
         if self.mode == Mode.CAPTURE:
+            self.capture_cursor = 0
             snapshot = self.poller.snapshot() if self.poller else {}
             self.active_capture = CaptureSession(
                 label=label,

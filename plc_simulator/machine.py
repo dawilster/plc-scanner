@@ -220,6 +220,21 @@ class RollFormMachine:
                 self.cut_phase = 1
                 self.cut_timer = 0.0
 
+        # Clear - reset piece counter (only when idle)
+        if self._get_coil(M_CMD_CLEAR):
+            self._set_coil(M_CMD_CLEAR, False)
+            if self.state == STATE_IDLE:
+                self._set_hr(D_QTY_CURRENT, 0)
+                self._set_coil(M_QTY_REACHED, False)
+
+        # Mode Set - toggle Manual/Auto (only when idle)
+        if self._get_coil(M_CMD_MODE_SET):
+            self._set_coil(M_CMD_MODE_SET, False)
+            if self.state == STATE_IDLE:
+                current = self._get_hr(D_MODE)
+                new_mode = 0 if current == 1 else 1
+                self._set_hr(D_MODE, new_mode)
+
     def _is_fault_cleared(self, fault_code):
         """Check if the condition that caused the fault has been resolved."""
         if fault_code == FAULT_LOW_PRES:
