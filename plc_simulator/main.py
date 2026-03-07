@@ -12,12 +12,16 @@ Usage:
 
 import asyncio
 import argparse
+import logging
 import signal
 
 from .server import build_datastore, run_server
 from .machine import RollFormMachine
 from .console import Console
 from .registers import *
+
+# Suppress noisy pymodbus exception logging (e.g. "Exception response 131 / 2")
+logging.getLogger("pymodbus").setLevel(logging.CRITICAL)
 
 
 def set_defaults(context):

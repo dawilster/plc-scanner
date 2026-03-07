@@ -4,25 +4,30 @@ Modbus TCP Server - simulates a Delta DVP-14ES PLC
 Uses ModbusSparseDataBlock to match the non-contiguous Delta DVP address space.
 Port 5020 by default (no root needed). On-site Delta DVP uses port 502.
 
-IMPORTANT: pymodbus 3.12 ModbusDeviceContext adds +1 to all addresses internally.
-So we store values at (address + 1) in the sparse datablock, and all internal
-reads/writes through the DeviceContext use the raw Delta DVP address naturally.
-The Modbus TCP protocol addresses on the wire match Delta DVP convention.
+NOTE: pymodbus 3.12+ renamed ModbusSlaveContext -> ModbusDeviceContext
+and ModbusDeviceContext adds +1 to all addresses internally.
+pymodbus <3.12 uses ModbusSlaveContext which also adds +1.
+So we store values at (address + 1) in the sparse datablock.
 """
 
-from pymodbus.datastore import (
-    ModbusDeviceContext,
-    ModbusServerContext,
-    ModbusSparseDataBlock,
-)
+import pymodbus
+from pymodbus.datastore import ModbusServerContext, ModbusSparseDataBlock
 from pymodbus.server import StartAsyncTcpServer
+
+_PV = tuple(int(x) for x in pymodbus.__version__.split(".")[:2])
+if _PV >= (3, 12):
+    from pymodbus.datastore import ModbusDeviceContext as _SlaveContext
+    _CTX_KW = "devices"
+else:
+    from pymodbus.datastore import ModbusSlaveContext as _SlaveContext
+    _CTX_KW = "slaves"
 
 from .registers import (
     D_BASE, M_BASE, X_BASE, Y_BASE,
     X_ESTOP, X_PRESSURE_OK, X_CUT_HOME, X_MATERIAL_PRESENT, X_GUARD_INTERLOCK,
 )
 
-# Offset to compensate for ModbusDeviceContext's internal address += 1
+# Offset to compensate for internal address += 1
 _OFFSET = 1
 
 
@@ -59,14 +64,14 @@ def build_datastore():
     # Input registers (not commonly used in DVP, placeholder)
     ir = {0: 0}
 
-    slave = ModbusDeviceContext(
+    slave = _SlaveContext(
         di=ModbusSparseDataBlock(di),
         co=ModbusSparseDataBlock(co),
         ir=ModbusSparseDataBlock(ir),
         hr=ModbusSparseDataBlock(hr),
     )
 
-    return ModbusServerContext(devices=slave, single=True)
+    return ModbusServerContext(**{_CTX_KW: slave}, single=True)
 
 
 async def run_server(context, host="0.0.0.0", port=5020):

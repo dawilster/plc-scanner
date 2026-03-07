@@ -1,0 +1,38 @@
+{
+  "3,4102": {
+    "name": "Pump pressure",
+    "confidence": 1,
+    "category": "encoder",
+    "notes": ""
+  },
+  "3,4098": {
+    "name": "Encoder Reading or Done",
+    "confidence": 1,
+    "category": "analog",
+    "notes": ""
+  },
+  "3,4096": {
+    "name": "Machine state",
+    "confidence": 1,
+    "category": "state",
+    "notes": ""
+  },
+  "3,4097": {
+    "name": "length",
+    "confidence": 1,
+    "category": "",
+    "notes": ""
+  },
+  "3,4099": {
+    "name": "Quantity",
+    "confidence": 1,
+    "category": "",
+    "notes": ""
+  },
+  "1,2049": {
+    "name": "Pump on/off",
+    "confidence": 1,
+    "category": "status",
+    "notes": ""
+  }
+}
